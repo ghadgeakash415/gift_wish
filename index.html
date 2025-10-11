@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Diwali 💥🎆</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at bottom, #0a0f1a, #040814);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .center { text-align: center; position: relative; z-index: 2; }
+
+  #lock, #content {
+    background: rgba(255,255,255,0.05);
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(255,255,255,0.1);
+  }
+
+  h1 { color: #ffd700; margin-bottom: 10px; }
+
+  .lead { font-size: 18px; margin-bottom: 25px; }
+
+  .pwd-row { margin-bottom: 15px; }
+
+  input[type="password"], input[type="text"] {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    width: 180px;
+    margin-right: 5px;
+  }
+
+  button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background: #ff9800;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  button.showhide { background: #444; }
+  button:hover { opacity: 0.9; }
+
+  .hint { font-size: 13px; margin-top: 10px; color: #ccc; }
+  .error { color: #ff5252; margin-top: 10px; font-size: 14px; }
+
+  #content { display: none; text-align: center; }
+
+  .wish {
+    font-size: 36px;
+    color: #ffdf5c;
+    margin-bottom: 10px;
+    animation: glow 1.2s infinite alternate;
+  }
+
+  @keyframes glow {
+    from { text-shadow: 0 0 10px #ffdf5c; }
+    to { text-shadow: 0 0 25px #ff9900; }
+  }
+
+  .sub { font-size: 18px; margin-bottom: 30px; color: #fff9c4; }
+
+  .diyas { font-size: 40px; margin-bottom: 20px; }
+
+  .diya {
+    display: inline-block;
+    margin: 0 5px;
+    animation: flicker 0.8s infinite alternate;
+  }
+
+  @keyframes flicker {
+    0% { opacity: 0.6; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1.2); }
+  }
+
+  canvas {
+    position: fixed;
+    top: 0; left: 0;
+    z-index: 1;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  .hearts {
+    position: fixed; bottom: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: hidden; pointer-events: none;
+    z-index: 0;
+  }
+
+  .heart {
+    position: absolute; bottom: -20px;
+    font-size: 24px; color: pink;
+    animation: float 3.5s linear infinite;
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-100vh) scale(1.7); opacity: 0; }
+  }
+
+  .small { font-size: 12px; color: #ccc; margin-top: 20px; }
+  
+</style>
+</head>
+<body>
+<canvas id="fireworks"></canvas>
+<div class="center">
+  <div>
+    <div id="lock">
+      <h1>This page is protected</h1>
+      <p class="lead">Enter the password to see a Diwali wish ✨</p>
+      <div class="pwd-row">
+        <input id="pwd" type="password" placeholder="Enter password" />
+        <button id="go">Open</button>
+        <button class="showhide" id="toggle">Show</button>
+      </div>
+      <div class="hint">Hint: default password is <strong>bestfriends</strong></div>
+      <div class="error" id="err" style="display:none"></div>
+    </div>
+
+    <div id="content" aria-hidden="true">
+      <div class="wish">🎆 Happy Diwali 🎇
+        <br>
+        <span style="font-weight:700;color:#fff;font-size:24px">My Dear Bestfriends 💖🫶 </span>
+      </div>
+      <div class="sub">May your life sparkle with joy, prosperity, and love 🪔💖🎆</div>
+      <div class="diyas">
+        <div class="diya"><img src="img/ss.jpg" alt="img-fuild"></div>
+        <!-- <div class="diya">🪔🎆</div>
+        <div class="diya">🪔💥</div> -->
+      </div>
+      <div class="small"><b>"माझी दिवाळी तुझ्या हास्याने सुरू होते आणि तुझ्या मिठीत संपते. तूच माझं तेजस्वी प्रकाश आहेस..!"</b>💖</div>
+    </div>
+  </div>
+</div>
+<div class="hearts" id="hearts"></div>
+
+<script>
+  const CORRECT = 'bestfriends';
+  const pwd = document.getElementById('pwd');
+  const go = document.getElementById('go');
+  const lock = document.getElementById('lock');
+  const content = document.getElementById('content');
+  const err = document.getElementById('err');
+  const toggle = document.getElementById('toggle');
+
+  function showError(text){
+    err.textContent = text;
+    err.style.display = 'block';
+    setTimeout(()=> err.style.display = 'none', 3000);
+  }
+
+  function unlock(){
+    const val = (pwd.value || '').trim();
+    if(!val){ showError('Please type the password'); return; }
+    if(val === CORRECT){
+      lock.style.display = 'none';
+      content.style.display = 'block';
+      startFireworks();
+      startHearts();
+    } else {
+      showError('Wrong password — try again');
+      pwd.value = '';
+      pwd.focus();
+    }
+  }
+
+  go.addEventListener('click', unlock);
+  pwd.addEventListener('keydown', (e)=>{ if(e.key==='Enter') unlock(); });
+  toggle.addEventListener('click', ()=>{
+    if(pwd.type === 'password'){ pwd.type = 'text'; toggle.textContent = 'Hide'; }
+    else { pwd.type = 'password'; toggle.textContent = 'Show'; }
+    pwd.focus();
+  });
+
+  // 🎆 Faster Fireworks Effect
+  function startFireworks(){
+    const canvas = document.getElementById('fireworks');
+    const ctx = canvas.getContext('2d');
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+    const particles = [];
+
+    class Particle {
+      constructor(x, y, color){
+        this.x = x; this.y = y;
+        this.radius = Math.random()*2+1.5;
+        this.color = color;
+        // 💥 Faster, more dynamic movement
+        this.speedX = (Math.random()-0.5)*14;
+        this.speedY = (Math.random()-0.5)*14;
+        this.alpha = 1;
+      }
+      draw(){
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.restore();
+      }
+      update(){
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.alpha -= 0.035; // faster fade
+      }
+    }
+
+    function burst(x, y){
+      const colors = ['#ffdf5c','#ff5733','#ff4081','#40c4ff','#76ff03','#ffd740'];
+      for(let i=0;i<80;i++){
+        particles.push(new Particle(x,y,colors[Math.floor(Math.random()*colors.length)]));
+      }
+    }
+
+    canvas.addEventListener('click', e => burst(e.clientX, e.clientY));
+    // 💥 Faster random bursts
+    setInterval(()=> burst(Math.random()*innerWidth, Math.random()*innerHeight/1.2), 700);
+
+    function animate(){
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      for(let i=0;i<particles.length;i++){
+        const p = particles[i];
+        if(p.alpha <= 0){ particles.splice(i,1); i--; continue; }
+        p.update();
+        p.draw();
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  // 💕 Floating Hearts
+  function startHearts(){
+    const hearts = document.getElementById('hearts');
+    const symbols = ['💖','💕','💞','💘','💓','🎆','💥'];
+    setInterval(()=>{
+      const h = document.createElement('div');
+      h.className = 'heart';
+      h.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+      h.style.left = `${Math.random()*100}%`;
+      h.style.fontSize = `${Math.random()*20+18}px`;
+      hearts.appendChild(h);
+      setTimeout(()=>h.remove(),3500);
+    },300);
+  }
+</script>
+</body>
+</html>
